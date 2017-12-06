@@ -1,4 +1,6 @@
 # Gomail
+
+[![Join the chat at https://gitter.im/gomail-community/Lobby](https://badges.gitter.im/gomail-community/Lobby.svg)](https://gitter.im/gomail-community/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/go-mail/gomail.svg?branch=master)](https://travis-ci.org/go-mail/gomail) [![Code Coverage](http://gocover.io/_badge/github.com/go-mail/gomail)](http://gocover.io/github.com/go-mail/gomail) [![Documentation](https://godoc.org/github.com/go-mail/gomail?status.svg)](https://godoc.org/github.com/go-mail/gomail)
 
 **IMPORTANT** - This is a fork of [go-gomail/gomail](https://github.com/go-gomail/gomail). See this [issue#104](https://github.com/go-gomail/gomail/issues/104)
