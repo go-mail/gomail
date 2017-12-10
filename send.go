@@ -1,10 +1,11 @@
-package mail
+package gomail
 
 import (
 	"errors"
 	"fmt"
 	"io"
-	stdmail "net/mail"
+	"net/mail"
+	"os"
 )
 
 // Sender is the interface that wraps the Send method.
@@ -54,6 +55,10 @@ func send(s Sender, m *Message) error {
 		return err
 	}
 
+	if err := m.checkEmbedsAndAttachments(); err != nil {
+		return err
+	}
+
 	if err := s.Send(from, to, m); err != nil {
 		return err
 	}
@@ -97,6 +102,20 @@ func (m *Message) getRecipients() ([]string, error) {
 	return list, nil
 }
 
+func (m *Message) checkEmbedsAndAttachments() error {
+	for _, file := range m.embedded {
+		if _, err := os.Stat(file.originalName); err != nil {
+			return err
+		}
+	}
+	for _, file := range m.attachments {
+		if _, err := os.Stat(file.originalName); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func addAddress(list []string, addr string) []string {
 	for _, a := range list {
 		if addr == a {
@@ -108,7 +127,7 @@ func addAddress(list []string, addr string) []string {
 }
 
 func parseAddress(field string) (string, error) {
-	addr, err := stdmail.ParseAddress(field)
+	addr, err := mail.ParseAddress(field)
 	if err != nil {
 		return "", fmt.Errorf("gomail: invalid address %q: %v", field, err)
 	}
