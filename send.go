@@ -36,7 +36,7 @@ func (f SendFunc) Send(from string, to []string, msg io.WriterTo) error {
 func Send(s Sender, msg ...*Message) error {
 	for i, m := range msg {
 		if err := send(s, m); err != nil {
-			return fmt.Errorf("gomail: could not send email %d: %v", i+1, err)
+			return &SendError{Cause: err, Index: uint(i + 1)}
 		}
 	}
 
