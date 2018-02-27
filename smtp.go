@@ -27,7 +27,7 @@ type Dialer struct {
 	// most cases since the authentication mechanism should use the STARTTLS
 	// extension instead.
 	SSL bool
-	// TSLConfig represents the TLS configuration used for the TLS (when the
+	// TLSConfig represents the TLS configuration used for the TLS (when the
 	// STARTTLS extension is used) or SSL connection.
 	TLSConfig *tls.Config
 	// LocalName is the hostname sent to the SMTP server with the HELO command.
