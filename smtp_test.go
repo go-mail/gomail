@@ -145,13 +145,19 @@ func TestDialerTimeoutNoRetry(t *testing.T) {
 		Port:         testPort,
 		RetryFailure: false,
 	}
+	testClient := &mockClient{
+		t:       t,
+		addr:    addr(d.Host, d.Port),
+		config:  d.TLSConfig,
+		timeout: true,
+	}
 
-	err := doTestSendMail(t, d, []string{
+	err := doTestSendMail(t, d, testClient, []string{
 		"Extension STARTTLS",
 		"StartTLS",
 		"Mail " + testFrom,
 		"Quit",
-	}, true)
+	})
 
 	if err.Error() != "gomail: could not send email 1: EOF" {
 		t.Error("expected to have got EOF, but got:", err)
@@ -252,25 +258,33 @@ func (w *mockWriter) Close() error {
 }
 
 func testSendMail(t *testing.T, d *Dialer, want []string) {
-	if err := doTestSendMail(t, d, want, false); err != nil {
+	testClient := &mockClient{
+		t:       t,
+		addr:    addr(d.Host, d.Port),
+		config:  d.TLSConfig,
+		timeout: false,
+	}
+
+	if err := doTestSendMail(t, d, testClient, want); err != nil {
 		t.Error(err)
 	}
 }
 
 func testSendMailTimeout(t *testing.T, d *Dialer, want []string) {
-	if err := doTestSendMail(t, d, want, true); err != nil {
+	testClient := &mockClient{
+		t:       t,
+		addr:    addr(d.Host, d.Port),
+		config:  d.TLSConfig,
+		timeout: true,
+	}
+
+	if err := doTestSendMail(t, d, testClient, want); err != nil {
 		t.Error(err)
 	}
 }
 
-func doTestSendMail(t *testing.T, d *Dialer, want []string, timeout bool) error {
-	testClient := &mockClient{
-		t:       t,
-		want:    want,
-		addr:    addr(d.Host, d.Port),
-		config:  d.TLSConfig,
-		timeout: timeout,
-	}
+func doTestSendMail(t *testing.T, d *Dialer, testClient *mockClient, want []string) error {
+	testClient.want = want
 
 	NetDialTimeout = func(network, address string, d time.Duration) (net.Conn, error) {
 		if network != "tcp" {
