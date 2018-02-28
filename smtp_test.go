@@ -97,6 +97,107 @@ func TestDialerSSLConfig(t *testing.T) {
 	})
 }
 
+func TestDialerNoStartTLS(t *testing.T) {
+	d := NewDialer(testHost, testPort, "user", "pwd")
+	d.RequireStartTLS = NoStartTLS
+	testSendMail(t, d, []string{
+		"Extension AUTH",
+		"Auth",
+		"Mail " + testFrom,
+		"Rcpt " + testTo1,
+		"Rcpt " + testTo2,
+		"Data",
+		"Write message",
+		"Close writer",
+		"Quit",
+		"Close",
+	})
+}
+
+func TestDialerOpportunisticStartTLS(t *testing.T) {
+	d := NewDialer(testHost, testPort, "user", "pwd")
+	d.RequireStartTLS = OpportunisticStartTLS
+	testSendMail(t, d, []string{
+		"Extension STARTTLS",
+		"StartTLS",
+		"Extension AUTH",
+		"Auth",
+		"Mail " + testFrom,
+		"Rcpt " + testTo1,
+		"Rcpt " + testTo2,
+		"Data",
+		"Write message",
+		"Close writer",
+		"Quit",
+		"Close",
+	})
+
+	if OpportunisticStartTLS != 0 {
+		t.Errorf("OpportunisticStartTLS: expected 0, got %d",
+			OpportunisticStartTLS)
+	}
+}
+
+func TestDialerOpportunisticStartTLSUnsupported(t *testing.T) {
+	d := NewDialer(testHost, testPort, "user", "pwd")
+	d.RequireStartTLS = OpportunisticStartTLS
+	testSendMailStartTLSUnsupported(t, d, []string{
+		"Extension STARTTLS",
+		"Extension AUTH",
+		"Auth",
+		"Mail " + testFrom,
+		"Rcpt " + testTo1,
+		"Rcpt " + testTo2,
+		"Data",
+		"Write message",
+		"Close writer",
+		"Quit",
+		"Close",
+	})
+}
+
+func TestDialerMandatoryStartTLS(t *testing.T) {
+	d := NewDialer(testHost, testPort, "user", "pwd")
+	d.RequireStartTLS = MandatoryStartTLS
+	testSendMail(t, d, []string{
+		"Extension STARTTLS",
+		"StartTLS",
+		"Extension AUTH",
+		"Auth",
+		"Mail " + testFrom,
+		"Rcpt " + testTo1,
+		"Rcpt " + testTo2,
+		"Data",
+		"Write message",
+		"Close writer",
+		"Quit",
+		"Close",
+	})
+}
+
+func TestDialerMandatoryStartTLSUnsupported(t *testing.T) {
+	d := NewDialer(testHost, testPort, "user", "pwd")
+	d.RequireStartTLS = MandatoryStartTLS
+
+	testClient := &mockClient{
+		t:        t,
+		addr:     addr(d.Host, d.Port),
+		config:   d.TLSConfig,
+		startTLS: false,
+		timeout:  true,
+	}
+
+	err := doTestSendMail(t, d, testClient, []string{
+		"Extension STARTTLS",
+	})
+
+	expected := "gomail: MandatoryStartTLS required, " +
+		"but SMTP server does not support STARTTLS"
+	if err.Error() != expected {
+		t.Errorf("expected %s, but got: %s", expected, err)
+	}
+}
+
 func TestDialerNoAuth(t *testing.T) {
 	d := &Dialer{
 		Host: testHost,
@@ -269,6 +370,20 @@ func testSendMail(t *testing.T, d *Dialer, want []string) {
 		addr:     addr(d.Host, d.Port),
 		config:   d.TLSConfig,
 		startTLS: true,
+		timeout:  false,
+	}
+
+	if err := doTestSendMail(t, d, testClient, want); err != nil {
+		t.Error(err)
+	}
+}
+
+func testSendMailStartTLSUnsupported(t *testing.T, d *Dialer, want []string) {
+	testClient := &mockClient{
+		t:        t,
+		addr:     addr(d.Host, d.Port),
+		config:   d.TLSConfig,
+		startTLS: false,
 		timeout:  false,
 	}
 

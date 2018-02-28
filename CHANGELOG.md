@@ -7,6 +7,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - #20: Adds `Message.SetBoundary` to allow specifying a custom MIME boundary.
+- #25: Adds `Dialer.RequireStartTLS` so that `MandatoryStartTLS` can
+  be required, or `NoStartTLS` can disable it. Contributed by Quantcast.
 
 ## [2.1.0] - 2017-12-14
 

@@ -20,6 +20,7 @@ func Example() {
 	m.Attach("/home/Alex/lolcat.jpg")
 
 	d := mail.NewDialer("smtp.example.com", 587, "user", "123456")
+	d.RequireStartTLS = mail.MandatoryStartTLS
 
 	// Send the email to Bob, Cora and Dan.
 	if err := d.DialAndSend(m); err != nil {
@@ -33,6 +34,7 @@ func Example_daemon() {
 
 	go func() {
 		d := mail.NewDialer("smtp.example.com", 587, "user", "123456")
+		d.RequireStartTLS = mail.MandatoryStartTLS
 
 		var s mail.SendCloser
 		var err error
@@ -80,6 +82,7 @@ func Example_newsletter() {
 	}
 
 	d := mail.NewDialer("smtp.example.com", 587, "user", "123456")
+	d.RequireStartTLS = mail.MandatoryStartTLS
 	s, err := d.Dial()
 	if err != nil {
 		panic(err)
