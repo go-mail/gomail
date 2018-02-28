@@ -146,10 +146,11 @@ func TestDialerTimeoutNoRetry(t *testing.T) {
 		RetryFailure: false,
 	}
 	testClient := &mockClient{
-		t:       t,
-		addr:    addr(d.Host, d.Port),
-		config:  d.TLSConfig,
-		timeout: true,
+		t:        t,
+		addr:     addr(d.Host, d.Port),
+		config:   d.TLSConfig,
+		startTLS: true,
+		timeout:  true,
 	}
 
 	err := doTestSendMail(t, d, testClient, []string{
@@ -165,12 +166,13 @@ func TestDialerTimeoutNoRetry(t *testing.T) {
 }
 
 type mockClient struct {
-	t       *testing.T
-	i       int
-	want    []string
-	addr    string
-	config  *tls.Config
-	timeout bool
+	t        *testing.T
+	i        int
+	want     []string
+	addr     string
+	config   *tls.Config
+	startTLS bool
+	timeout  bool
 }
 
 func (c *mockClient) Hello(localName string) error {
@@ -180,7 +182,11 @@ func (c *mockClient) Hello(localName string) error {
 
 func (c *mockClient) Extension(ext string) (bool, string) {
 	c.do("Extension " + ext)
-	return true, ""
+	ok := true
+	if ext == "STARTTLS" {
+		ok = c.startTLS
+	}
+	return ok, ""
 }
 
 func (c *mockClient) StartTLS(config *tls.Config) error {
@@ -259,10 +265,11 @@ func (w *mockWriter) Close() error {
 
 func testSendMail(t *testing.T, d *Dialer, want []string) {
 	testClient := &mockClient{
-		t:       t,
-		addr:    addr(d.Host, d.Port),
-		config:  d.TLSConfig,
-		timeout: false,
+		t:        t,
+		addr:     addr(d.Host, d.Port),
+		config:   d.TLSConfig,
+		startTLS: true,
+		timeout:  false,
 	}
 
 	if err := doTestSendMail(t, d, testClient, want); err != nil {
@@ -272,10 +279,11 @@ func testSendMail(t *testing.T, d *Dialer, want []string) {
 
 func testSendMailTimeout(t *testing.T, d *Dialer, want []string) {
 	testClient := &mockClient{
-		t:       t,
-		addr:    addr(d.Host, d.Port),
-		config:  d.TLSConfig,
-		timeout: true,
+		t:        t,
+		addr:     addr(d.Host, d.Port),
+		config:   d.TLSConfig,
+		startTLS: true,
+		timeout:  true,
 	}
 
 	if err := doTestSendMail(t, d, testClient, want); err != nil {
