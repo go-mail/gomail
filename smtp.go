@@ -106,9 +106,8 @@ func (d *Dialer) Dial() (SendCloser, error) {
 	if !d.SSL && d.StartTLSPolicy != NoStartTLS {
 		ok, _ := c.Extension("STARTTLS")
 		if !ok && d.StartTLSPolicy == MandatoryStartTLS {
-			err := fmt.Errorf(
-				"gomail: MandatoryStartTLS required, but " +
-					"SMTP server does not support STARTTLS")
+			err := StartTLSUnsupportedError{
+				Policy: d.StartTLSPolicy}
 			return nil, err
 		}
 
@@ -170,6 +169,30 @@ const (
 	// clear.
 	NoStartTLS = -1
 )
+
+func (policy *StartTLSPolicy) String() string {
+	switch *policy {
+	case OpportunisticStartTLS:
+		return "OpportunisticStartTLS"
+	case MandatoryStartTLS:
+		return "MandatoryStartTLS"
+	case NoStartTLS:
+		return "NoStartTLS"
+	default:
+		return fmt.Sprintf("StartTLSPolicy:%v", *policy)
+	}
+}
+
+// StartTLSUnsupportedError is returned by Dial when connecting to an SMTP
+// server that does not support STARTTLS.
+type StartTLSUnsupportedError struct {
+	Policy StartTLSPolicy
+}
+
+func (e StartTLSUnsupportedError) Error() string {
+	return "gomail: " + e.Policy.String() + " required, but " +
+		"SMTP server does not support STARTTLS"
+}
 
 func addr(host string, port int) string {
 	return fmt.Sprintf("%s:%d", host, port)

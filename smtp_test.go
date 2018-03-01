@@ -191,6 +191,11 @@ func TestDialerMandatoryStartTLSUnsupported(t *testing.T) {
 		"Extension STARTTLS",
 	})
 
+	if _, ok := err.(StartTLSUnsupportedError); !ok {
+		t.Errorf("expected StartTLSUnsupportedError, but got: %s",
+			reflect.TypeOf(err).Name())
+	}
+
 	expected := "gomail: MandatoryStartTLS required, " +
 		"but SMTP server does not support STARTTLS"
 	if err.Error() != expected {
