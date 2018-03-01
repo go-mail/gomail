@@ -27,9 +27,17 @@ type Dialer struct {
 	// most cases since the authentication mechanism should use the STARTTLS
 	// extension instead.
 	SSL bool
-	// TSLConfig represents the TLS configuration used for the TLS (when the
+	// TLSConfig represents the TLS configuration used for the TLS (when the
 	// STARTTLS extension is used) or SSL connection.
 	TLSConfig *tls.Config
+	// StartTLSPolicy represents the TLS security level required to
+	// communicate with the SMTP server.
+	//
+	// This defaults to OpportunisticStartTLS for backwards compatibility,
+	// but we recommend MandatoryStartTLS for all modern SMTP servers.
+	//
+	// This option has no effect if SSL is set to true.
+	StartTLSPolicy StartTLSPolicy
 	// LocalName is the hostname sent to the SMTP server with the HELO command.
 	// By default, "localhost" is sent.
 	LocalName string
@@ -95,8 +103,15 @@ func (d *Dialer) Dial() (SendCloser, error) {
 		}
 	}
 
-	if !d.SSL {
-		if ok, _ := c.Extension("STARTTLS"); ok {
+	if !d.SSL && d.StartTLSPolicy != NoStartTLS {
+		ok, _ := c.Extension("STARTTLS")
+		if !ok && d.StartTLSPolicy == MandatoryStartTLS {
+			err := StartTLSUnsupportedError{
+				Policy: d.StartTLSPolicy}
+			return nil, err
+		}
+
+		if ok {
 			if err := c.StartTLS(d.tlsConfig()); err != nil {
 				c.Close()
 				return nil, err
@@ -136,6 +151,47 @@ func (d *Dialer) tlsConfig() *tls.Config {
 		return &tls.Config{ServerName: d.Host}
 	}
 	return d.TLSConfig
+}
+
+// StartTLSPolicy constants are valid values for Dialer.StartTLSPolicy.
+type StartTLSPolicy int
+
+const (
+	// OpportunisticStartTLS means that SMTP transactions are encrypted if
+	// STARTTLS is supported by the SMTP server. Otherwise, messages are
+	// sent in the clear. This is the default setting.
+	OpportunisticStartTLS StartTLSPolicy = iota
+	// MandatoryStartTLS means that SMTP transactions must be encrypted.
+	// SMTP transactions are aborted unless STARTTLS is supported by the
+	// SMTP server.
+	MandatoryStartTLS
+	// NoStartTLS means encryption is disabled and messages are sent in the
+	// clear.
+	NoStartTLS = -1
+)
+
+func (policy *StartTLSPolicy) String() string {
+	switch *policy {
+	case OpportunisticStartTLS:
+		return "OpportunisticStartTLS"
+	case MandatoryStartTLS:
+		return "MandatoryStartTLS"
+	case NoStartTLS:
+		return "NoStartTLS"
+	default:
+		return fmt.Sprintf("StartTLSPolicy:%v", *policy)
+	}
+}
+
+// StartTLSUnsupportedError is returned by Dial when connecting to an SMTP
+// server that does not support STARTTLS.
+type StartTLSUnsupportedError struct {
+	Policy StartTLSPolicy
+}
+
+func (e StartTLSUnsupportedError) Error() string {
+	return "gomail: " + e.Policy.String() + " required, but " +
+		"SMTP server does not support STARTTLS"
 }
 
 func addr(host string, port int) string {
