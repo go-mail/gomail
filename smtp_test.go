@@ -99,7 +99,7 @@ func TestDialerSSLConfig(t *testing.T) {
 
 func TestDialerNoStartTLS(t *testing.T) {
 	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.RequireStartTLS = NoStartTLS
+	d.StartTLSPolicy = NoStartTLS
 	testSendMail(t, d, []string{
 		"Extension AUTH",
 		"Auth",
@@ -116,7 +116,7 @@ func TestDialerNoStartTLS(t *testing.T) {
 
 func TestDialerOpportunisticStartTLS(t *testing.T) {
 	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.RequireStartTLS = OpportunisticStartTLS
+	d.StartTLSPolicy = OpportunisticStartTLS
 	testSendMail(t, d, []string{
 		"Extension STARTTLS",
 		"StartTLS",
@@ -140,7 +140,7 @@ func TestDialerOpportunisticStartTLS(t *testing.T) {
 
 func TestDialerOpportunisticStartTLSUnsupported(t *testing.T) {
 	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.RequireStartTLS = OpportunisticStartTLS
+	d.StartTLSPolicy = OpportunisticStartTLS
 	testSendMailStartTLSUnsupported(t, d, []string{
 		"Extension STARTTLS",
 		"Extension AUTH",
@@ -158,7 +158,7 @@ func TestDialerOpportunisticStartTLSUnsupported(t *testing.T) {
 
 func TestDialerMandatoryStartTLS(t *testing.T) {
 	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.RequireStartTLS = MandatoryStartTLS
+	d.StartTLSPolicy = MandatoryStartTLS
 	testSendMail(t, d, []string{
 		"Extension STARTTLS",
 		"StartTLS",
@@ -177,7 +177,7 @@ func TestDialerMandatoryStartTLS(t *testing.T) {
 
 func TestDialerMandatoryStartTLSUnsupported(t *testing.T) {
 	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.RequireStartTLS = MandatoryStartTLS
+	d.StartTLSPolicy = MandatoryStartTLS
 
 	testClient := &mockClient{
 		t:        t,

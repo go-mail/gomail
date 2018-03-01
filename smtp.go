@@ -30,14 +30,14 @@ type Dialer struct {
 	// TLSConfig represents the TLS configuration used for the TLS (when the
 	// STARTTLS extension is used) or SSL connection.
 	TLSConfig *tls.Config
-	// RequireStartTLS represents the TLS security level required to
+	// StartTLSPolicy represents the TLS security level required to
 	// communicate with the SMTP server.
 	//
 	// This defaults to OpportunisticStartTLS for backwards compatibility,
 	// but we recommend MandatoryStartTLS for all modern SMTP servers.
 	//
 	// This option has no effect if SSL is set to true.
-	RequireStartTLS StartTLSSecurity
+	StartTLSPolicy StartTLSPolicy
 	// LocalName is the hostname sent to the SMTP server with the HELO command.
 	// By default, "localhost" is sent.
 	LocalName string
@@ -103,9 +103,9 @@ func (d *Dialer) Dial() (SendCloser, error) {
 		}
 	}
 
-	if !d.SSL && d.RequireStartTLS != NoStartTLS {
+	if !d.SSL && d.StartTLSPolicy != NoStartTLS {
 		ok, _ := c.Extension("STARTTLS")
-		if !ok && d.RequireStartTLS == MandatoryStartTLS {
+		if !ok && d.StartTLSPolicy == MandatoryStartTLS {
 			err := fmt.Errorf(
 				"gomail: MandatoryStartTLS required, but " +
 					"SMTP server does not support STARTTLS")
@@ -154,14 +154,14 @@ func (d *Dialer) tlsConfig() *tls.Config {
 	return d.TLSConfig
 }
 
-// Valid values for Dialer.RequireStartTLS.
-type StartTLSSecurity int
+// StartTLSPolicy constants are valid values for Dialer.StartTLSPolicy.
+type StartTLSPolicy int
 
 const (
 	// OpportunisticStartTLS means that SMTP transactions are encrypted if
 	// STARTTLS is supported by the SMTP server. Otherwise, messages are
 	// sent in the clear. This is the default setting.
-	OpportunisticStartTLS StartTLSSecurity = iota
+	OpportunisticStartTLS StartTLSPolicy = iota
 	// MandatoryStartTLS means that SMTP transactions must be encrypted.
 	// SMTP transactions are aborted unless STARTTLS is supported by the
 	// SMTP server.
