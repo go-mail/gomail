@@ -197,6 +197,13 @@ func ExampleMessage_SetBody() {
 	m.SetBody("text/plain", "Hello!")
 }
 
+func ExampleMessage_SetBodyWriter() {
+	t := template.Must(template.New("example").Parse("Hello {{.}}!"))
+	m.SetBodyWriter("text/plain", func(w io.Writer) error {
+		return t.Execute(w, "Bob")
+	})
+}
+
 func ExampleMessage_SetDateHeader() {
 	m.SetDateHeader("X-Date", time.Now())
 }

@@ -236,7 +236,7 @@ func TestBodyWriter(t *testing.T) {
 	m := NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
-	m.AddAlternativeWriter("text/plain", func(w io.Writer) error {
+	m.SetBodyWriter("text/plain", func(w io.Writer) error {
 		_, err := w.Write([]byte("Test message"))
 		return err
 	})
