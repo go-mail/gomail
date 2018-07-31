@@ -161,7 +161,11 @@ func (w *messageWriter) Write(p []byte) (int, error) {
 }
 
 func (w *messageWriter) writeString(s string) {
-	n, _ := io.WriteString(w.w, s)
+	if w.err != nil { // do nothing when in error
+		return
+	}
+	var n int
+	n, w.err = io.WriteString(w.w, s)
 	w.n += int64(n)
 }
 
