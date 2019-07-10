@@ -87,6 +87,7 @@ func Example_newsletter() {
 	if err != nil {
 		panic(err)
 	}
+	defer s.Close()
 
 	m := mail.NewMessage()
 	for _, r := range list {
