@@ -62,15 +62,17 @@ func send(s Sender, m *Message) error {
 }
 
 func (m *Message) getFrom() (string, error) {
+	fieldName := "Sender"
 	from := m.header["Sender"]
 	if len(from) == 0 {
 		from = m.header["From"]
 		if len(from) == 0 {
 			return "", errors.New(`gomail: invalid message, "From" field is absent`)
 		}
+		fieldName = "From"
 	}
 
-	return parseAddress(from[0])
+	return parseAddress(fieldName, from[0])
 }
 
 func (m *Message) getRecipients() ([]string, error) {
@@ -85,7 +87,7 @@ func (m *Message) getRecipients() ([]string, error) {
 	for _, field := range []string{"To", "Cc", "Bcc"} {
 		if addresses, ok := m.header[field]; ok {
 			for _, a := range addresses {
-				addr, err := parseAddress(a)
+				addr, err := parseAddress(field, a)
 				if err != nil {
 					return nil, err
 				}
@@ -107,10 +109,10 @@ func addAddress(list []string, addr string) []string {
 	return append(list, addr)
 }
 
-func parseAddress(field string) (string, error) {
-	addr, err := stdmail.ParseAddress(field)
+func parseAddress(fieldName, fieldValue string) (string, error) {
+	addr, err := stdmail.ParseAddress(fieldValue)
 	if err != nil {
-		return "", fmt.Errorf("gomail: invalid address %q: %v", field, err)
+		return "", fmt.Errorf("gomail: invalid address %q for field %q: %v", fieldValue, fieldName, err)
 	}
 	return addr.Address, nil
 }
