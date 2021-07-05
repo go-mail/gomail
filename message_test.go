@@ -3,6 +3,7 @@ package mail
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"path/filepath"
@@ -378,6 +379,26 @@ func TestRename(t *testing.T) {
 	}
 
 	testMessage(t, m, 1, want)
+}
+
+func TestEmptyAddress(t *testing.T) {
+	cases := []struct {
+		headerName string
+		value      string
+	}{
+		{headerName: "From", value: ""},
+		{headerName: "To", value: ""},
+	}
+	for i, tc := range cases {
+		t.Run(fmt.Sprintf("case_%d", i), func(t *testing.T) {
+			m := NewMessage()
+			m.SetHeader(tc.headerName, tc.value)
+			err := Send(stubSendMail(t, 1, nil), m)
+			if err == nil {
+				t.Error("expected error but got none")
+			}
+		})
+	}
 }
 
 func TestAttachmentsOnly(t *testing.T) {
